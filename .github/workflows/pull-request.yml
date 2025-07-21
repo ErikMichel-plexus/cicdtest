@@ -29,12 +29,12 @@ env:
   # Environment - For CDK Synth
   # Source branch hotfix -> pre
   # Source branch feature -> dev
-  ENV: ${{ github.event.pull_request.head.ref == 'main' && 'pro' || (contains(github.event.pull_request.head.ref, 'hotfix/') || contains(github.event.pull_request.head.ref, 'develop')) && 'pre' || 'dev' }}
+  ENV: ${{ (contains(github.event.pull_request.head.ref, 'release/') || contains(github.event.pull_request.head.ref, 'hotfix/') || contains(github.event.pull_request.head.ref, 'develop')) && 'pre' || 'dev' }}
 
 jobs:
   pull-request:
     name: Build and Test
-    if: ( contains(github.event.pull_request.head.ref, 'feature/') || contains(github.event.pull_request.head.ref, 'hotfix/') || contains(github.event.pull_request.head.ref, 'develop') || contains(github.event.pull_request.head.ref, 'release'))
+    if: ( contains(github.event.pull_request.head.ref, 'feature/') || contains(github.event.pull_request.head.ref, 'hotfix/') || contains(github.event.pull_request.head.ref, 'develop') || contains(github.event.pull_request.head.ref, 'release/'))
     # Self-hosted Runner
     # hotfix -> pre (AWS account)
     # feature -> dev (AWS account)
