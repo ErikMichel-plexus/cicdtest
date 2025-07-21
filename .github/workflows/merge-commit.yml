@@ -1,0 +1,65 @@
+# Copyright (c) MAPFRE DevOps Platform
+#
+# Merge Commit Workflow. Triggers when:
+#   - A pull request to develop is closed and merged
+#   - A pull request to main is closed and merged
+#
+# Required secrets:
+#   - AZURE_ARTIFACTS_PW      (Organization)
+#   - MAR2_GITHUB_GIT_TOKEN   (Repository) This token is used to commit and push changes to the repository. It is neccessary permissions to do it, 
+#                             so it is recommended to use a personal access token with the necessary permissions, tipically owner permissions.
+
+name: Merge Commit
+run-name: "Generate ${{ fromJson(github.base_ref == 'main' || github.base_ref == 'master') && 'Release' || 'Snapshot' }} Artifact #${{ github.run_number }}"
+
+on:   
+  pull_request:
+    types:
+      - closed
+    branches: 
+      - main
+      - develop    
+      - 'release/**'
+
+env:
+
+  ENV: ${{ (github.base_ref == 'main' || github.base_ref == 'master') && 'pro' || contains(github.base_ref, 'release') && 'pre' || 'dev' }}
+
+  
+  IS_RELEASE: ${{ fromJson(github.base_ref == 'main' || github.base_ref == 'master') }}
+
+  # Entity asociated to the product
+  ENTITY: change-with-real-entity
+
+  
+
+jobs:
+  merge:
+    #https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-pull_request_target-workflow-when-a-pull-request-merges
+    if: ${{ github.event.pull_request.merged == true && !startsWith(github.head_ref , 'release/branch--') }} 
+
+    name: "Generate ${{ fromJson(github.base_ref == 'main' || github.base_ref == 'master') && 'Release' || 'Snapshot' }} Artifact"
+
+
+    # Self-hosted Runner
+    # main -> pro (AWS account)
+    # develop -> dev (AWS account)
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Print environment
+        run: echo "ENV is $ENV"  
+
+      - name: Print is release
+        run: echo "Is release is $IS_RELEASE"  
+      
+  # Deploy to dev 
+  deploy:
+    needs: merge
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: ${{ (github.base_ref == 'main' || github.base_ref == 'master') && 'pro' || contains(github.base_ref, 'release') && 'pre' || 'dev' }}
