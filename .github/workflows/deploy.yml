@@ -26,14 +26,6 @@ on:
       environment:
         required: true
         type: string
-      version:
-        required: true
-        type: string
-      is_workflow_call:
-        description: 'Internal Flag to distinguish workflow_call from workflow_dispatch'
-        required: false   
-        type: boolean
-        default: true
       
   
 jobs:
