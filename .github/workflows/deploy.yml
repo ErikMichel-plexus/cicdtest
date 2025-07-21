@@ -1,0 +1,49 @@
+# Copyright (c) MAPFRE DevOps Platform
+#
+# Deploy Workflow. Triggers when:
+#   - Manually
+#   - From Merge-commit workflow after a pull request to develop is closed and merged.
+#
+# Required secrets:
+#   - AZURE_ARTIFACTS_PW    (Organization)
+
+name: Deploy
+run-name: "Deploy version ${{ inputs.is_workflow_call && inputs.version || github.ref_name }} to ${{ inputs.environment }} #${{ github.run_number }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options:
+          - snd
+          - dev
+          - pre
+          - pro    
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      is_workflow_call:
+        description: 'Internal Flag to distinguish workflow_call from workflow_dispatch'
+        required: false   
+        type: boolean
+        default: true
+      
+env:
+  
+jobs:
+  check-environment-matrix:
+    name: "Check environment matrix"
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check Parameters
+        run: |
+          echo "environment: ${{ inputs.environment }}" 
+        
